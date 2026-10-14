@@ -1,0 +1,9 @@
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+plan.bin
+plan.json
+__pycache__/
+.DS_Store

@@ -1,0 +1,48 @@
+#!/usr/bin/env python3
+"""plan-risk: flag risky changes in a Terraform plan.
+
+Input is the output of `terraform show -json <planfile>`. See the "Task C"
+section of the top-level README for the exact contract (rules, output, exit
+codes). You may rewrite this file in bash+jq if you prefer; only the CLI
+behaviour is tested.
+"""
+import json
+import sys
+
+
+def analyze(plan):
+    """Return a list of findings for a parsed plan.
+
+    A finding is whatever shape you like; render() below turns it into a line.
+    """
+    raise NotImplementedError("Task C: implement the risk rules")
+
+
+def render(findings):
+    for finding in findings:
+        print(finding)
+
+
+def main(argv):
+    if len(argv) != 2:
+        print("usage: plan-risk PLAN.json", file=sys.stderr)
+        return 2
+    try:
+        with open(argv[1], encoding="utf-8") as handle:
+            plan = json.load(handle)
+    except (OSError, json.JSONDecodeError) as err:
+        print(f"plan-risk: cannot read plan: {err}", file=sys.stderr)
+        return 2
+
+    try:
+        findings = analyze(plan)
+    except NotImplementedError as err:
+        print(f"plan-risk: not implemented: {err}", file=sys.stderr)
+        return 3
+
+    render(findings)
+    return 1 if findings else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

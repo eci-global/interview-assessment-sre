@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Single entry point for every check. `make` is not required.
+#   ./run            run every core check and print a summary (same as ./run check)
+#   ./run fmt|validate|test|state|script   run one check
+#   ./run stretch    optional senior stretch checks
+set -uo pipefail
+cd "$(dirname "$0")"
+
+STEPS=(fmt validate test state script)
+
+init() { terraform init -input=false -no-color >/dev/null; }
+
+step() {
+  case "$1" in
+    fmt) terraform fmt -check -recursive -diff ;;
+    validate) init && terraform validate -no-color ;;
+    test) init && terraform test -no-color ;;
+    state) ./checks/state_safety.sh ;;
+    script) python3 -I -m unittest discover -s tools/tests -p 'test_plan_risk.py' -v ;;
+    stretch) python3 -I -m unittest discover -s tools/tests -p 'test_stretch.py' -v ;;
+    *)
+      echo "unknown check: $1 (choose from: ${STEPS[*]} stretch check)" >&2
+      return 64
+      ;;
+  esac
+}
+
+check_all() {
+  local rc=0 summary=() s
+  for s in "${STEPS[@]}"; do
+    echo "=== $s ==="
+    if step "$s"; then summary+=("  PASS  $s"); else summary+=("  FAIL  $s"); rc=1; fi
+  done
+  echo
+  echo "=== summary ==="
+  printf '%s\n' "${summary[@]}"
+  return $rc
+}
+
+case "${1:-check}" in
+  check) check_all ;;
+  *) step "$1" ;;
+esac
