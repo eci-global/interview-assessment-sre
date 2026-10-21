@@ -72,13 +72,15 @@ elif ! grep -qF "Resource $volume has" destroy.out || ! grep -q 'cannot be destr
 fi
 
 # Second plan against the same existing state, with web-b removed from the servers.
-servers_json="$(jq -c '.configuration.root_module.module_calls.fleet.expressions.servers.constant_value // empty' plan.json)"
+servers_json="$(jq -c '(.configuration.root_module.module_calls.fleet.expressions.servers.constant_value // empty) | select(type == "array")' plan.json)"
 if [ -z "$servers_json" ]; then
   bad "removing web-b: the root config's module call needs a literal servers list"
 else
   jq -n --argjson s "$servers_json" '{module: {fleet: {servers: ($s | map(select(.name != "web-b")))}}}' >zz_removal_override.tf.json
 fi
-if ! terraform plan -input=false -no-color -out=plan-remove.bin >plan-remove.out 2>&1; then
+if [ -z "$servers_json" ]; then
+  : # already reported above
+elif ! terraform plan -input=false -no-color -out=plan-remove.bin >plan-remove.out 2>&1; then
   bad "removing web-b from the root config: terraform plan failed"
   sed -n 's/^/    /;1,25p' plan-remove.out
 else
