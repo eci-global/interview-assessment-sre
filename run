@@ -31,9 +31,13 @@ check_all() {
     echo "=== $s ==="
     if step "$s"; then summary+=("  PASS  $s"); else summary+=("  FAIL  $s"); rc=1; fi
   done
+  echo "=== stretch (optional) ==="
+  local stretch="FAIL"
+  if step stretch; then stretch="PASS"; fi
   echo
   echo "=== summary ==="
   printf '%s\n' "${summary[@]}"
+  echo "  OPTIONAL  stretch: $stretch (does not affect the exit code)"
   return $rc
 }
 

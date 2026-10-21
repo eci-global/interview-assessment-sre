@@ -32,7 +32,7 @@ def plan_with(*changes):
             "address": address,
             "mode": "managed",
             "type": address.split(".")[-2] if "." in address else address,
-            "change": {"actions": actions, "before": {}, "after": after or {}},
+            "change": {"actions": actions, "before": {}, "after": after},
         }
         for address, actions, after in changes
     ]
@@ -154,6 +154,55 @@ class PlanRiskTest(unittest.TestCase):
                 plan["resource_changes"] = bad
                 code, out = self.run_plan(plan)
                 self.assertEqual(code, 2, out)
+
+    def test_binary_input_exits_2_without_traceback(self):
+        samples = {
+            "non-utf8": b"\xff\xfe\x00\x01{\x80",
+            "zip-archive": b"PK\x03\x04" + bytes(range(256)),
+            "empty": b"",
+        }
+        for name, data in samples.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "plan.bin"
+                path.write_bytes(data)
+                code, out = run(path)
+                self.assertEqual(code, 2, out)
+                self.assertNotIn("Traceback", out)
+
+    def test_forget_action_is_accepted_as_a_plan(self):
+        code, out = self.run_plan(plan_with(("aws_instance.legacy", ["forget"], None)))
+        self.assertEqual(code, 0, out)
+        self.assertIn("no risky changes", out)
+
+    def test_forget_action_next_to_a_destroy_reports_only_the_destroy(self):
+        plan = plan_with(
+            ("aws_instance.legacy", ["forget"], None),
+            ("aws_instance.old", ["delete"], None),
+        )
+        code, out = self.run_plan(plan)
+        self.assertEqual(code, 1, out)
+        lines = high_lines(out)
+        self.assertEqual(len(lines), 1, out)
+        self.assertIn("aws_instance.old", lines[0])
+
+    def test_update_with_only_unknown_after_apply_differences_is_not_risky(self):
+        plan = plan_with()
+        plan["resource_changes"] = [
+            {
+                "address": "terraform_data.x",
+                "mode": "managed",
+                "type": "terraform_data",
+                "change": {
+                    "actions": ["update"],
+                    "before": {"input": {"name": "a"}, "output": {"name": "a"}},
+                    "after": {"input": {"name": "a"}},
+                    "after_unknown": {"output": True},
+                },
+            }
+        ]
+        code, out = self.run_plan(plan)
+        self.assertEqual(code, 0, out)
+        self.assertIn("no risky changes", out)
 
     def test_no_arguments_exits_2(self):
         code, out = run()
