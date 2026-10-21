@@ -26,3 +26,41 @@ run "rejects_unknown_environment" {
 
   expect_failures = [var.environment]
 }
+
+run "rejects_staging_environment" {
+  command = plan
+
+  module {
+    source = "./modules/service_fleet"
+  }
+
+  variables {
+    environment = "staging"
+  }
+
+  expect_failures = [var.environment]
+}
+
+run "accepts_dev_environment" {
+  command = plan
+
+  module {
+    source = "./modules/service_fleet"
+  }
+
+  variables {
+    environment = "dev"
+  }
+}
+
+run "accepts_prod_environment" {
+  command = plan
+
+  module {
+    source = "./modules/service_fleet"
+  }
+
+  variables {
+    environment = "prod"
+  }
+}
