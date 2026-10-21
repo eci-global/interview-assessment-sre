@@ -76,7 +76,7 @@ servers_json="$(jq -c '.configuration.root_module.module_calls.fleet.expressions
 if [ -z "$servers_json" ]; then
   bad "removing web-b: the root config's module call needs a literal servers list"
 else
-  jq -n --argjson s "$servers_json" '{module: {fleet: {servers: ($s | map(select(.name != "web-b")))}}}' >override.tf.json
+  jq -n --argjson s "$servers_json" '{module: {fleet: {servers: ($s | map(select(.name != "web-b")))}}}' >zz_removal_override.tf.json
 fi
 if ! terraform plan -input=false -no-color -out=plan-remove.bin >plan-remove.out 2>&1; then
   bad "removing web-b from the root config: terraform plan failed"
