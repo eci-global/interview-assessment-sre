@@ -75,17 +75,23 @@ plan-risk PLAN.json
 
 Releases are gated with two tools built on `plan-risk`. A colleague wrote both; they are in `tools/` and the team is about to start using them. The plans for the next two releases are in `releases/`.
 
-`tools/review-plan PLAN.json` is the release gate:
+**Your task:**
+
+1. Make `tools/review-plan` meet its contract (below).
+2. Make `tools/review-report` meet its contract (below).
+3. Decide each release plan in `releases/` and record it in `NOTES.md` (below).
+
+**1. `tools/review-plan PLAN.json`** is the release gate:
 
 - a clean plan prints `READY` and exits 0
 - a plan with risky changes prints `BLOCKED` and exits 1
 - unusable input, as defined for `plan-risk`, prints `INVALID` and exits 2
 
-`tools/review-report PLAN.json OUTDIR` writes the report directory that is attached to the release ticket. Reports contain finding addresses, severities, reasons, the source digest and the exit status only.
+**2. `tools/review-report PLAN.json OUTDIR`** writes the report directory that is attached to the release ticket. Reports contain finding addresses, severities, reasons, the source digest and the exit status only.
 
-Both tools must meet the contract above before the release decision below is made.
+**3. Release decision.** After each release the data volume stays managed by Terraform at `module.fleet.terraform_data.data_volume`, with its existing ID. In `NOTES.md`, give one line per plan file in `releases/`: `<file>: approve` or `<file>: hold`. For a hold, name the affected resource addresses on that line.
 
-Release decision: after each release the data volume stays managed by Terraform at `module.fleet.terraform_data.data_volume`, with its existing ID. In `NOTES.md`, give one line per plan file in `releases/`: `<file>: approve` or `<file>: hold`. For a hold, name the affected resource addresses on that line.
+Make the decisions in step 3 only after both tools meet their contracts.
 
 ## Stretch (optional, mainly for senior candidates)
 
