@@ -4,13 +4,13 @@ Welcome! The `checkout` team's Terraform module (`modules/service_fleet`) was wr
 
 You can work through this live with an interviewer or on your own; either way, explain your reasoning as you go.
 
-**Time box: 45 minutes.** The core work is sized for about 35; the rest is slack for reading and thinking out loud. Don't polish — prioritise, and tell us what you would do with more time. If you finish early, there is an optional stretch at the end.
+**Time box: 65 minutes.** The core work is sized for about 55; the rest is slack for reading and thinking out loud. Don't polish — prioritise, and tell us what you would do with more time. If you finish early, there is an optional stretch at the end.
 
 ## Ground rules
 
 - Everything runs **offline with no cloud account and no credentials**. The module uses the built-in `terraform_data` resource, so there is nothing to download. Do not point anything at a real cloud.
 - Use any tools you would use on the job: docs, search, your editor. We care about how you think, so narrate your decisions and be ready to explain every line you keep.
-- Don't edit the tests under `tests/` or `tools/tests/`, or anything under `checks/`. Everything else is fair game.
+- Don't edit the tests under `tests/` or `tools/tests/`, the plans under `releases/`, or anything under `checks/`. Everything else is fair game.
 - Prefer small, reviewable changes. Treat the existing infrastructure as **live production**: assume state already exists for what the root config describes.
 
 ## Setup
@@ -27,7 +27,7 @@ Requires Terraform `>= 1.9, < 2.0` (tested on 1.15; install from https://develop
 ./run stretch    # optional, see Stretch
 ```
 
-At the start every check fails. You're done when `./run` is green. The summary also shows the stretch result on an `OPTIONAL` line; it never affects the exit code.
+At the start every check fails. You're done when your solution meets the stated contract. The summary also shows the stretch result on an `OPTIONAL` line; it never affects the exit code.
 
 ## Tasks
 
@@ -71,6 +71,20 @@ plan-risk PLAN.json
 - If nothing is risky, print `no risky changes`.
 - Exit code: `0` nothing risky, `1` at least one `HIGH` finding, `2` the input can't be used: missing file, invalid JSON, JSON that is not a Terraform plan (a plan has `format_version` and `planned_values`; `terraform show -json` of a *state* has no `planned_values`), or a malformed `resource_changes`. Never crash with a traceback.
 
+### Task D — Release review (≈ 20 min)
+
+Releases are gated with two tools built on `plan-risk`. A colleague wrote both; they are in `tools/` and the team is about to start using them. The plans for the next two releases are in `releases/`.
+
+`tools/review-plan PLAN.json` is the release gate:
+
+- a clean plan prints `READY` and exits 0
+- a plan with risky changes prints `BLOCKED` and exits 1
+- unusable input, as defined for `plan-risk`, prints `INVALID` and exits 2
+
+`tools/review-report PLAN.json OUTDIR` writes the report directory that is attached to the release ticket. Reports contain finding addresses, severities, reasons, the source digest and the exit status only.
+
+Release decision: after each release the data volume stays managed by Terraform at `module.fleet.terraform_data.data_volume`, with its existing ID. In `NOTES.md`, give one line per plan file in `releases/`: `<file>: approve` or `<file>: hold`. For a hold, name the affected resource addresses on that line.
+
 ## Stretch (optional, mainly for senior candidates)
 
 Extend `plan-risk` (`./run stretch`):
@@ -83,7 +97,7 @@ Extend `plan-risk` (`./run stretch`):
 
 ## What to submit
 
-Leave your changes in the working tree; there is nothing to build or upload. Be ready to say, for each task, what you changed and why, what you chose to leave alone, and what you would do with more time. Your interviewer will tell you how to hand the work in: a walkthrough, a zip, or a branch. If you write notes, put them in a `NOTES.md` at the repo root.
+Leave your changes in the working tree; there is nothing to build or upload. Be ready to say, for each task, what you changed and why, what you chose to leave alone, and what you would do with more time. Your interviewer will tell you how to hand the work in: a walkthrough, a zip, or a branch. Put your notes, including the Task D decisions, in a `NOTES.md` at the repo root.
 
 ## What we're looking at
 
@@ -102,5 +116,8 @@ checks/state_safety.sh      state-safety check (do not edit)
 checks/legacy/              frozen pre-refactor code (do not edit)
 tools/plan-risk             Task C
 tools/tests/                tests and plan fixtures for Task C
+tools/review-plan           release gate, Task D
+tools/review-report         release report, Task D
+releases/                   release plans, Task D
 run                         single entry point for all checks
 ```

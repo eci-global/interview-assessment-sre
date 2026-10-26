@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# review-report: write a report directory for a plan, to attach to the release ticket.
+#   review-report PLAN.json OUTDIR
+set -u
+here="$(cd "$(dirname "$0")" && pwd)"
+plan="${1:?usage: review-report PLAN.json OUTDIR}"
+dir="${2:?usage: review-report PLAN.json OUTDIR}"
+
+mkdir -p "$dir"
+"$here/plan-risk" "$plan" >"$dir/findings.txt" 2>"$dir/errors.txt"
+echo $? >"$dir/exit-status"
+sha256sum "$plan" | cut -d' ' -f1 >"$dir/source.sha256"
+cp "$plan" "$dir/source-plan.json"
+
+echo "report written to $dir"
