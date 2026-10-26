@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# review-plan: release gate. Wraps plan-risk and turns its findings into a verdict.
+#   review-plan PLAN.json
+set -u
+here="$(cd "$(dirname "$0")" && pwd)"
+
+out="$("$here/plan-risk" "${1:-}" 2>/dev/null)"
+
+if printf '%s\n' "$out" | grep -q '^HIGH '; then
+  echo BLOCKED
+  exit 1
+fi
+
+echo READY
+exit 0
