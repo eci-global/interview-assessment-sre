@@ -83,6 +83,8 @@ Releases are gated with two tools built on `plan-risk`. A colleague wrote both; 
 
 `tools/review-report PLAN.json OUTDIR` writes the report directory that is attached to the release ticket. Reports contain finding addresses, severities, reasons, the source digest and the exit status only.
 
+Both tools must meet the contract above before the release decision below is made.
+
 Release decision: after each release the data volume stays managed by Terraform at `module.fleet.terraform_data.data_volume`, with its existing ID. In `NOTES.md`, give one line per plan file in `releases/`: `<file>: approve` or `<file>: hold`. For a hold, name the affected resource addresses on that line.
 
 ## Stretch (optional, mainly for senior candidates)

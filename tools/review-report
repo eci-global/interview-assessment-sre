@@ -9,7 +9,11 @@ dir="${2:?usage: review-report PLAN.json OUTDIR}"
 mkdir -p "$dir"
 "$here/plan-risk" "$plan" >"$dir/findings.txt" 2>"$dir/errors.txt"
 echo $? >"$dir/exit-status"
-sha256sum "$plan" | cut -d' ' -f1 >"$dir/source.sha256"
+if command -v sha256sum >/dev/null 2>&1; then
+  sha256sum "$plan" | cut -d' ' -f1 >"$dir/source.sha256"
+else
+  shasum -a 256 "$plan" | cut -d' ' -f1 >"$dir/source.sha256"
+fi
 cp "$plan" "$dir/source-plan.json"
 
 echo "report written to $dir"
